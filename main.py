@@ -11,8 +11,8 @@ class Veiculo(abc.ABC):
 
     def entrada_passageiros(self,numero : int):
 
-        if self.passageiros >self.capacidade :
-            return("Não deixe ninguem entrar")
+        if self.passageiros  > self.capacidade :
+            return("Onibus lotado")
         elif self.passageiros + numero > self.capacidade :
             superior = self.capacidade - self.passageiros + numero
             self.passageiros += numero
@@ -22,8 +22,10 @@ class Veiculo(abc.ABC):
 
     def saida_passageiros(self,numero :int):
         self.passageiros -= numero
+        lugares_vagos=self.capacidade- self.passageiros
+        print(f"O onibus tem agora {lugares_vagos} lugares vagos")
 
-    def começar_rota(self):
+    def comecar_rota(self):
         pass
 
 
@@ -66,8 +68,13 @@ class FrotaVeiculos:
     def __str__(self) -> str:
         total_veiculos = len(self._onibus) + len(self._vans) + len(self._micro_onibus) + len(self._bicicletas)
         return f"FrotaVeiculos: {total_veiculos} veículos registrados."
+    
+    def emprestar_bicicleta(self):
 
+        pass
 
+    def devolver_bicicleta(self):
+        pass
 
 
 class Onibus(Veiculo):
@@ -87,21 +94,25 @@ class Micro_onibus(Onibus):
         super().__init__(placa, capacidade, motorista, funcionando, rota,passageiros)
         
 
-
 class Pessoa:
     def __init__(self, nome : str, senha : str):
         self.nome = nome
-        self.__senha =senha
+        self.__senha = senha
 
     def notificar_ocorrencia(self,conteudo) -> str:
-        Gerenciador._ocorrencia.append(conteudo)
+        Gerenciador._ocorrencias.append(conteudo)
         
 
     def get_senha(self):
         return self.__senha
     
     def set_senha(self, nova_senha):
-        self.__senha = nova_senha       
+        if nova_senha == str:
+            self.__senha = nova_senha 
+            return "senha alterada com sucesso"
+        
+        else:
+            return "tipo de senha errado, digite outro"
 
     def mudar_senha(self,nova_senha):
         self.set_senha(nova_senha)
@@ -125,19 +136,9 @@ class Bicicleta:
     def __str__(self)-> str :
         pass
 
-    def usar(self):
+    def comecar_rota(self):
         pass
     
-    def emprestar(self, numero, quantidade, novo_numero):
-        quantidade = int(input("Quantas bicicletas serão emprestadas?"))
-
-        novo_numero = numero - quantidade
-
-        return(f"{quantidade} bicicleta(s) foram emprestadas, restam {novo_numero}.")
-    
-    def devolver(self):
-        pass
-        
 
 class Ponto_parada():
     def __init__(self, endereco:str, tipo_veiculo:str):
@@ -155,11 +156,12 @@ class Notificar():
 
 class Gerenciador():
     
-    def __init__(self,usuarios: list ,frota_veiculos : FrotaVeiculos,nome):
+    def __init__(self,usuarios: list ,frota_veiculos : FrotaVeiculos,nome : str, postos_parada : list):
         self.nome= nome
         self.__usuarios=usuarios
         self.frota_veiculos=frota_veiculos
         self._ocorrencias=[]
+        self.pontos_parada=self.pontos_parada
 
     def criar_aviso(self,conteudo):
        aviso=Aviso(conteudo)
@@ -180,19 +182,52 @@ class Gerenciador():
         lista_usuarios.append(novo_usuario)
         self.set_usuario(lista_usuarios)
         
-    def relatorio_geral(self):
-        pass
 
     def consultar_usuario(self,nome):
         
-        if nome in self.get_usuarios() :
-            return True
-        
-        else:
+        usuarios=self.get_usuarios()
+        v=0
+        for n in range(len(usuarios)):
+            if nome == usuarios[n] :
+                return True
+                v+=1
+        if v==0 :
             return False
-    
+             
     def get_usuarios(self):
         return self.__usuarios
 
     def set_usuario(self,lista_usuarios):
-        self.__usuarios=lista_usuarios         
+        if lista_usuarios == list:
+            self.__usuarios = lista_usuarios
+            return "lista atualizada"
+
+        else:
+            return "tipo de usuarios errado, digite outro"        
+
+    class Login():
+        def __init__(self,nome,senha):
+            self.nome=nome
+            self.__senha=senha
+
+        def criar_conta(self)-> list:
+            passageiro=Passageiro(self.nome,self.__senha)
+            Gerenciador.cadastrar_usuario(passageiro)
+            
+
+        def entrar(self):
+            for i in range(len(Gerenciador.usuarios)):
+                if self.nome[i] ==  Gerenciador.get_usuarios[i].nome and self.get_senha() == Gerenciador.get_usuarios[i].get_senha():
+
+                    return True
+                
+                else: 
+                    return False
+            
+
+        def get_senha(self):
+            return self.__senha
+
+        def set_senha(self,senha):
+            if senha == str:
+                self.__senha= senha
