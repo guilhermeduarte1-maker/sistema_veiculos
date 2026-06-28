@@ -21,4 +21,4 @@ Este projeto simula um sistema de Gerenciamento de Tráfego Escolar, o qual visa
 Clone o repositório:
 git clone https://github.com/guilhermeduarte1-maker/sistema_veiculos.git
 
-Nós possuímos o direito sobre todo o código presente aqui.
+Nós, integrantes desse grupo, possuímos o direito sobre todo o código presente aqui.
