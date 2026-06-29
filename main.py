@@ -31,6 +31,13 @@ class Veiculo(abc.ABC):
 
 
 class FrotaVeiculos:
+    """
+    Gerencia uma frota diversificada de veículos corporativos ou urbanos.
+        Esta classe centraliza o controle de diferentes categorias de transporte 
+    (ônibus, vans, micro-ônibus e bicicletas), permitindo monitorar a quantidade 
+    total de itens cadastrados, visualizar os componentes da frota e gerenciar 
+    o fluxo específico de empréstimo e devolução de bicicletas.
+    """
 
     def __init__(self, onibus : list, vans : list, micro_onibus : list, bicicleta: list):
         self._onibus = onibus
