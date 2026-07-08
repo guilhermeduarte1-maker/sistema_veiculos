@@ -102,6 +102,11 @@ class Micro_onibus(Onibus):
         
 
 class Pessoa:
+    """
+    Representa uma pessoa genérica dentro do sistema de trasponte escolar. 
+    Essa classe serve como base para identificação de usuários, armazenando informações essenciais como nome e credenciais de acesso (senha). Além disso, permite que o indivíduo interaja com o sistema enviando notificações e relatórios de ocorrência diretamente ao gerenciador, bem como realizar a manutenção e atualização de seus dados de segurança
+    """
+    
     def __init__(self, nome : str, senha : str):
         self.nome = nome
         self.__senha = senha
