@@ -2,6 +2,14 @@ import abc
 import datetime
 
 class Veiculo(abc.ABC):
+       """
+    Representa um veículo genérico dentro do sistema de transporte escolar.
+        Essa classe serve como base para os outros tipos de veículo, 
+    tendo caractéristicas como: a placa, a capacidade máxima de passageiros,
+    o motorista que vai dirigir ele, o estado que o ônibus se encontra(funcionando ou não)
+    e a quantidade de passageiros presentes.
+        Além disso, tem os metodos da entrada de passageiros, da saída deles e começar a rota.
+      """
     def __init__(self,placa : str,capacidade : int,motorista : str,funcionando : bool,passageiros: int):
         self._placa=placa
         self.capacidade=capacidade
@@ -85,18 +93,29 @@ class FrotaVeiculos:
 
 
 class Onibus(Veiculo):
+      """
+    Simplesmente herda as caractéristicas da classe veículo.
+      """
     def __init__(self, placa, capacidade, motorista, funcionando, rota,passageiros):
         super().__init__(placa, capacidade, motorista, funcionando,passageiros)
         
         self.rota = rota
 
 class Van(Veiculo):
+     """
+    Herda as caractéristicas da classe veículo, mas recebe de forma diferente 
+    o método de receber passageiros(tem uma capacidade menor do que o ônibus)
+     """
     def __init__(self, placa, capacidade, motorista, funcionando, rota,passageiros):
         super().__init__(placa, capacidade, motorista, funcionando,passageiros)
         
         self.rota = rota
             
 class Micro_onibus(Onibus):
+      """
+    Herda as caractéristicas da classe veículo, mas recebe de forma diferente 
+    o método de receber passageiros(tem uma capacidade menor do que o ônibus)
+      """
     def __init__(self, placa, capacidade, motorista, funcionando, rota,passageiros):
         super().__init__(placa, capacidade, motorista, funcionando, rota,passageiros)
         
@@ -104,9 +123,11 @@ class Micro_onibus(Onibus):
 class Pessoa:
     """
     Representa uma pessoa genérica dentro do sistema de trasponte escolar. 
-        Essa classe serve como base para identificação de usuários, armazenando informações essenciais como nome e credenciais de acesso (senha).
-    Além disso, permite que o indivíduo interaja com o sistema enviando notificações e relatórios de ocorrência diretamente ao gerenciador,
-    bem como realizar a manutenção e atualização de seus dados de segurança
+        Essa classe serve como base para identificação de usuários, armazenando informações
+    essenciais como nome e credenciais de acesso (senha).
+        Além disso, permite que o indivíduo interaja com o sistema enviando notificações e
+    relatórios de ocorrência diretamente ao gerenciador, bem como realizar a manutenção e
+    atualização de seus dados de segurança
     """
     
     def __init__(self, nome : str, senha : str):
@@ -133,12 +154,19 @@ class Pessoa:
         
 
 class Motorista(Pessoa):
+        """
+    Representa um motorista, herda todas as caractéristicas da classe pessoa, 
+    mas com a peculiaridade da lista de veículos que ele pode dirigir.
+        """
     def __init__(self, nome, senha, veiculos_dirigidos: list):
         super().__init__(nome, senha)
         
         self.veiculos_dirigidos = veiculos_dirigidos
     
 class Passageiro(Pessoa):
+        """
+    Simplesmente herda todas as caractéristicas e métodos da classe pessoa.
+        """
     def __init__(self, nome, senha):
         super().__init__(nome, senha)
 
