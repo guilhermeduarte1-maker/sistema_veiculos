@@ -2,7 +2,7 @@
 import csv
 
 class LeitorCsvMixing():
-    def ler_csv(arquivo):
+    def ler_csv(self,arquivo):
         '''
         Lê um arquivo CSV e retorna os dados como uma lista de dicionários.
         '''
@@ -17,9 +17,10 @@ class LeitorCsvMixing():
             print(' Dado não encontrado.')
             pass
         return dados
+    
 class EscritorCsvMixing():
 
-    def escrever_csv(dados, arquivo, fieldnames):
+    def escrever_csv(self,dados, arquivo, fieldnames):
         '''
         Escreve uma lista de dicionários em um arquivo CSV.
         '''
