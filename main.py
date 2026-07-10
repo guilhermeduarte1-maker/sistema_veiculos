@@ -1,3 +1,4 @@
+#main.py
 import abc
 import datetime
 import csv
@@ -180,12 +181,14 @@ class Pessoa:
     de ocorrências diretamente ao gerenciador, bem como realize a manutenção e
     atualização de seus dados de segurança.
     """
+    ocorrencias_gerais = []
+
     def __init__(self, nome : str, senha : str):
         self.nome = nome
         self.__senha = senha
 
-    def notificar_ocorrencia(self,conteudo) -> str:
-        Gerenciador._ocorrencias.append(conteudo)
+    def notificar_ocorrencia(self,conteudo) -> None:
+        Pessoa.ocorrencias_gerais.append(conteudo)
         
 
     def get_senha(self):
@@ -253,13 +256,24 @@ class Bicicleta(Veiculo):
         Ela atua diretamente integração com o gerenciador para viabilizar as rotas alternativas 
         e o fluxo de empréstimos rápidos e devoluções pelos usuários do sistema.
     """
-    def __init__(self, placa, capacidade, motorista, funcionando, rota,passageiros,em_uso):
-        super().__init__(placa, capacidade, motorista, funcionando,passageiros)
+    def __init__(self, placa, funcionando=True, disponivel=True):
+        # Passa os dados para o construtor do Veiculo
+        super().__init__(placa=placa, capacidade=1, motorista="", funcionando=funcionando, passageiros=0)        
+        self.__disponivel = disponivel 
+
+    # O @property faz o método get funcionar como se fosse um atributo comum (bike.disponivel)
+    
+    @property
+    def disponivel(self):
+        return self.__disponivel
+
+    # O @disponivel.setter faz o método set aceitar atribuições diretas (bike.disponivel = True)
+    @disponivel.setter
+    def disponivel(self, valor):
+        self.__disponivel = valor
         
-        self.em_uso = em_uso
-        
-    def __str__(self)-> str:
-        return str(self.numero)
+    def __str__(self) -> str:
+        return str(self._placa)
 
     
 
