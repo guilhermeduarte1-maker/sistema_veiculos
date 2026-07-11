@@ -1,43 +1,16 @@
 #main.py
 import abc
-import datetime
 import csv
 from dados import OperadorArquivo
-
-class Veiculo(abc.ABC):
-    """Classe abstrata base para todos os veiculos gerenciados"""
-    def __init__(self,placa : str,capacidade : int,motorista : str,funcionando : bool,passageiros: int):
-        self._placa=placa
-        self.capacidade=capacidade
-        self.motorista=motorista
-        self.funcionando=funcionando
-        self.passageiros=passageiros
-
-    def entrada_passageiros(self,numero : int):
-
-        if self.passageiros  > self.capacidade :
-            return("Onibus lotado")
-        elif self.passageiros + numero > self.capacidade :
-            superior = self.capacidade - self.passageiros + numero
-            self.passageiros += numero
-            return (f"Numero de passageiros superior em {superior} da capacidade maxima") 
-        else:
-            self.passageiros += numero 
-
-    def saida_passageiros(self,numero :int):
-        self.passageiros -= numero
-        lugares_vagos=self.capacidade- self.passageiros
-        print(f"O onibus tem agora {lugares_vagos} lugares vagos")
-
-
-
+from veiculos import Onibus, Van, Micro_onibus, Bicicleta
+from pessoas import Passageiro,Motorista,Pessoa_admin
 
 class FrotaVeiculos:
     """
     Gerencia uma frota diversificada de veículos corporativos ou urbanos.
         Esta classe centraliza o controle de diferentes categorias de transporte 
     (ônibus, vans, micro-ônibus e bicicletas), permitindo monitorar a quantidade 
-    total de itens cadastrados, visualizar os componentes da frota e gerenciar 
+    total de itens cadastrados, visualizar os componentes da frota e gerenciar
     o fluxo específico de empréstimo e devolução de bicicletas.
     """
 
@@ -109,17 +82,12 @@ class FrotaVeiculos:
             print(f"Erro: Bicicleta {placa} não encontrada.")
             return False
 
-        # Salva utilizando o atributo correto da bicicleta (_placa) para a coluna 'numero'
-        dados = [
-            {'numero': b._placa, 'funcionamento': b.funcionamento, 'disponivel': b.disponivel} 
-            for b in self.get_bicicletas()
-        ]
+        dados = [{'numero': b._placa, 'funcionamento': str(b.funcionamento), 'disponivel': str(b.disponivel)} for b in self.get_bicicletas()]
         operador.escrever_csv(dados, 'bicicletas.csv', ['numero', 'funcionamento', 'disponivel'])
         return True
 
         
     def devolver_bicicleta(self, placa):
-        """Lê o CSV, valida, devolve a bicicleta e salva no CSV"""
         operador = OperadorArquivo('bicicletas.csv')
         
         linhas = operador.ler_csv('bicicletas.csv')
@@ -132,7 +100,6 @@ class FrotaVeiculos:
 
         sucesso = False
         for bike in self.get_bicicletas():
-            # Busca baseada no atributo herdado _placa
             if str(bike._placa) == str(placa):
                 if bike.disponivel:
                     print(f"Erro: A bicicleta {placa} já consta como disponível.")
@@ -147,151 +114,36 @@ class FrotaVeiculos:
             print(f"Erro: Bicicleta {placa} não pertence a esta frota.")
             return False
 
-        dados = [
-            {'numero': b._placa, 'funcionamento': b.funcionamento, 'disponivel': b.disponivel} 
-            for b in self.get_bicicletas()
-        ]
+        dados = [{'numero': b._placa, 'funcionamento': str(b.funcionamento), 'disponivel': str(b.disponivel)} for b in self.get_bicicletas()]
         operador.escrever_csv(dados, 'bicicletas.csv', ['numero', 'funcionamento', 'disponivel'])
         return True
 
-
-class Onibus(Veiculo):
-    def __init__(self, placa, capacidade, motorista, funcionando, rota,passageiros):
-        super().__init__(placa, capacidade, motorista, funcionando,passageiros)
-        
-        self.rota = rota
-
-class Van(Veiculo):
-    def __init__(self, placa, capacidade, motorista, funcionando, rota,passageiros):
-        super().__init__(placa, capacidade, motorista, funcionando,passageiros)
-        
-        self.rota = rota
-            
-class Micro_onibus(Onibus):
-    def __init__(self, placa, capacidade, motorista, funcionando, rota,passageiros):
-        super().__init__(placa, capacidade, motorista, funcionando, rota,passageiros)
-        
-
-class Pessoa:
-    """
-    Representa uma pessoa genérica dentro do sistema de transporte.
-        Esta classe serve como base para a identificação de usuários, armazenando
-    informações essenciais como nome e credenciais de acesso (senha). Além disso,
-    permite que o indivíduo interaja com o sistema enviando notificações e relatórios
-    de ocorrências diretamente ao gerenciador, bem como realize a manutenção e
-    atualização de seus dados de segurança.
-    """
-    ocorrencias_gerais = []
-
-    def __init__(self, nome : str, senha : str):
-        self.nome = nome
-        self.__senha = senha
-
-    def notificar_ocorrencia(self,conteudo) -> None:
-        Pessoa.ocorrencias_gerais.append(conteudo)
-        
-
-    def get_senha(self):
-        return self.__senha
-    
-    def set_senha(self, nova_senha):
-        if isinstance(nova_senha, str):
-            self.__senha = nova_senha 
-            return "senha alterada com sucesso"
-        
-        else:
-            return "tipo de senha errado, digite outro"
-
-    def mudar_senha(self,nova_senha):
-        resultado = self.set_senha(nova_senha)
-        if "errado" in resultado:
-            return resultado  
-        operador = OperadorArquivo('usuarios.csv')
-        linhas = operador.ler_csv('usuarios.csv')
-        
-        if linhas:
-            dados_atualizados = []
-            for l in linhas:
-                if l['nome'] == self.nome:
-                    l['senha'] = self.get_senha()
-                dados_atualizados.append(l)
-                
-            operador.escrever_csv(dados_atualizados, 'usuarios.csv', ['nome', 'senha'])
-            return "Senha alterada e sincronizada no CSV com sucesso!"
-        
-        return "Erro: Arquivo de usuários não encontrado para atualização."
-
-            
-        
-
-class Motorista(Pessoa):
-    """
-    Representa um funcionário habilitado a conduzir os veículos da frota.
-        Como uma extensão de classe pessoa, esta classe adiciona a responsabilidade
-        de operação do sistema de transportes, mantendo  um registro atualizado de quais 
-        veículos específicos (como ônibus, vans ou micro-ônibus) estão sob a sua
-        condução ou autorizados para a sua escala de trabalho.
-    """
-    def __init__(self, nome, senha, veiculos_dirigidos: list):
-        super().__init__(nome, senha)
-        
-        self.veiculos_dirigidos = veiculos_dirigidos
-    
-class Passageiro(Pessoa):
-    """
-    Representa o usuário final dos serviços de transportes oferecios pela frota.
-        Herdando as características básicas de identificação e autenticação da classe Pessoa,
-        esta classe individualiza o papel do cidadão ou colaborador que utiliza os 
-        veículos para deslocamento urbano ou corporativo, permitindo sua integração com os 
-        módulos de rotas, embarques e controle de capacidade.
-    """
-    def __init__(self, nome, senha):
-        super().__init__(nome, senha)
-
-class Bicicleta(Veiculo):
-    """
-    Representa uma unidade de bicicleta disponível para compartilhamento na frota.
-        Esta controla os dados individuas de identificação de cada ciclomotor, 
-        rastreando seu número de registro e seu estado atual de funcionamento (manutenção).
-        Ela atua diretamente integração com o gerenciador para viabilizar as rotas alternativas 
-        e o fluxo de empréstimos rápidos e devoluções pelos usuários do sistema.
-    """
-    def __init__(self, placa, funcionando=True, disponivel=True):
-        # Passa os dados para o construtor do Veiculo
-        super().__init__(placa=placa, capacidade=1, motorista="", funcionando=funcionando, passageiros=0)        
-        self.__disponivel = disponivel 
-
-    # O @property faz o método get funcionar como se fosse um atributo comum (bike.disponivel)
-    
-    @property
-    def disponivel(self):
-        return self.__disponivel
-
-    # O @disponivel.setter faz o método set aceitar atribuições diretas (bike.disponivel = True)
-    @disponivel.setter
-    def disponivel(self, valor):
-        self.__disponivel = valor
-        
-    def __str__(self) -> str:
-        return str(self._placa)
-
-    
-
 class Ponto_parada():
-    """Classe responsavel por criar os locacis onde o onibus para com a informação do tipo de veiculo que passa na localidade"""
-    def __init__(self, endereco:str, tipo_veiculo:str):
-        self.endereco = endereco
-        self.tipo_veiculo = tipo_veiculo
+        """Classe responsavel por criar os locacis onde o onibus para com a informação do tipo de veiculo que passa na localidade"""
+        def __init__(self, endereco:str, tipo_veiculo:str):
+            self.endereco = endereco
+            self.tipo_veiculo = tipo_veiculo
+
 
 class Aviso():
-    """Cria o conteudo-chave da notificação"""
-    def __init__(self, conteudo:str):
-        self.conteudo = conteudo
+        """Cria o conteudo-chave da notificação"""
+        def __init__(self, conteudo:str):
+            self.conteudo = conteudo
+
 
 class Notificar():
-    """Mostra aos usuario os avisos , cujo conteudo advem da classe Aviso"""
-    def mostrar_Aviso():
-        return(f"{Gerenciador.nome} notifica, no dia {datetime.date.today()}, que {Aviso.conteudo}")
+        """Mostra aos usuario os avisos , cujo conteudo advem da classe Aviso"""
+        @staticmethod
+        def mostrar_aviso(Aviso, notificador):
+                texto_aviso = f"{notificador.nome} notifica que : {Aviso.conteudo}"
+
+                operador=OperadorArquivo("avisos.csv")
+                dados_aviso = [{"autor": notificador.nome,"conteudo" : Aviso.conteudo     }]
+                operador.escrever_csv(dados_aviso,"avisos.csv",fieldnames=["autor","conteudo"  ])
+
+                return texto_aviso
+                
+
 
 class Gerenciador():
     """Classe principal do sistema, gerencia o frota veiculos , os usuarios do sistema, pontos de parada e as bicicletas"""
@@ -300,7 +152,7 @@ class Gerenciador():
         self.nome= nome
         self.__usuarios=usuarios
         self.frota_veiculos=frota_veiculos
-        self._ocorrencias=[]
+        self.ocorrencias=[]
         self.pontos_parada=pontos_parada
         self.operador_usuarios = OperadorArquivo('usuarios.csv')
         dados_carregados = self.sincronizar_usuarios("carregar")
@@ -309,7 +161,7 @@ class Gerenciador():
             self.__usuarios = dados_carregados
         else:
             self.__usuarios = usuarios
-            if usuarios:  # Se a lista inicial não for vazia, já persiste no arquivo
+            if usuarios:  
                 self.sincronizar_usuarios("salvar")
 
     def sincronizar_usuarios(self, acao="carregar"):
@@ -325,8 +177,9 @@ class Gerenciador():
             self.operador_usuarios.escrever_csv(dados, self.operador_usuarios.arquivo, fieldnames=['nome', 'senha'])
 
     def criar_aviso(self,conteudo):
+        
        aviso=Aviso(conteudo)
-       Notificar.mostrar_Aviso(aviso)
+       return Notificar.mostrar_aviso(aviso, self)
         
         
 
@@ -360,34 +213,42 @@ class Gerenciador():
             self.sincronizar_usuarios("salvar")
             return "lista atualizada"
         else:
-            return "tipo de usuarios errado, digite outro"    
+            return "tipo de usuarios errado, digite outro"  
 
-    class Login():
-        """Verifica se um usuario possui o cadastro no sistema, permitindo que ele o acesse, ou cadastra-o"""
-        def __init__(self,nome,senha, gerenciador_instancia):
-            self.nome=nome
-            self.__senha=senha
-            self.gerenciador = gerenciador_instancia
 
-        def criar_conta(self)-> list:
-            passageiro = Passageiro(self.nome, self.__senha)
-            self.gerenciador.cadastrar_usuario(passageiro)
-            print(f"Conta criada com sucesso para {self.nome}!")
-            
+class Login():
+    """Verifica se um usuario possui o cadastro no sistema, permitindo que ele o acesse, ou cadastra-o"""
 
-        def entrar(self):
-            for usuario in self.gerenciador.get_usuarios():
-                if usuario.nome == self.nome and usuario.get_senha() == self.__senha:
-                    print(f"Login bem-sucedido! Bem-vindo {self.nome}.")
-                    return True
-            print("Erro: Usuário ou senha incorretos.")
-            return False
-            
+    def __init__(self,nome,senha, gerenciador_instancia):
+        self.nome=nome
+        self.__senha=senha
+        self.gerenciador = gerenciador_instancia
 
-        def get_senha(self):
-            return self.__senha
+    def criar_conta(self)-> str:
 
-        def set_senha(self, senha):
-            if isinstance(senha, str):
-                self.__senha = senha
+        passageiro = Passageiro(self.nome, self.get_senha())
+        self.gerenciador.cadastrar_usuario(passageiro)
 
+        return "Conta criada com sucesso!"
+        
+
+    def entrar(self):
+        if not self.gerenciador.consultar_usuario(self.nome):
+            return "Usuário não encontrado."
+        
+
+
+        for usuario in self.gerenciador.get_usuarios():
+            if usuario.nome == self.nome and usuario.get_senha() == self.get_senha():
+
+                return "Login bem sucedido."
+
+        return "Senha incorreta."
+        
+
+    def get_senha(self):
+        return self.__senha
+
+    def set_senha(self, senha):
+        if isinstance(senha, str):
+            self.__senha = senha
