@@ -1,254 +1,241 @@
-#main.py
-import abc
-import csv
+import datetime
 from dados import OperadorArquivo
+from pessoas import Pessoa_admin, Motorista, Passageiro
 from veiculos import Onibus, Van, Micro_onibus, Bicicleta
-from pessoas import Passageiro,Motorista,Pessoa_admin
+
+class Ponto_parada:
+    """
+    Cria um ponto de parada com o endereço e o tipo de veiculo que para nele.
+        Essa classe é usada para armazenar os pontos de parada no sistema.
+    """
+    def __init__(self, endereco, tipo_veiculo):
+        self.endereco = endereco
+        self.tipo_veiculo = tipo_veiculo
+
+class Aviso:
+    """
+    Cria uma mensagem que contem o conteudo a ser avisado
+        Essa classe é usada para armazenar informacoes de alertas e avisos gerais 
+        emitidos pela administração do sistema.
+    """
+    def __init__(self, conteudo):
+        self.conteudo = conteudo
 
 class FrotaVeiculos:
     """
-    Gerencia uma frota diversificada de veículos corporativos ou urbanos.
-        Esta classe centraliza o controle de diferentes categorias de transporte 
-    (ônibus, vans, micro-ônibus e bicicletas), permitindo monitorar a quantidade 
-    total de itens cadastrados, visualizar os componentes da frota e gerenciar
-    o fluxo específico de empréstimo e devolução de bicicletas.
+    Variavel que armazena as listas dos veiculos e retorna a quantidade especifica de cada veiculo
+        Essa classe é usada para organizar e gerenciar a frota de veículos do sistema,
+        permitindo o acesso rápido às listas de ônibus, vans, micro-ônibus e bicicletas.
     """
+    def __init__(self, onibus=None, vans=None, micro_onibus=None, bicicleta=None):
+        self.onibus = onibus or []
+        self.vans = vans or []
+        self.micro_onibus = micro_onibus or []
+        self.bicicletas = bicicleta or []
 
-    def __init__(self, onibus : list, vans : list, micro_onibus : list, bicicleta: list):
-        self.__onibus = onibus
-        self.__vans = vans
-        self.__micro_onibus = micro_onibus
-        self.__bicicletas = bicicleta
+    def get_onibus(self): return self.onibus
+    def get_vans(self): return self.vans
+    def get_micro_onibus(self): return self.micro_onibus
+    def get_bicicletas(self): return self.bicicletas
 
-    def mostrar_frota(self):
-        print(f"{self.get_onibus()},  {self.get_vans()},  {self.get_micro_onibus()},  {self.get_bicicletas()}")
-              
-    def get_onibus(self):
-        return self.__onibus
+    def __str__(self):
+        return f"Ônibus: {len(self.onibus)} | Vans: {len(self.vans)} | Micro: {len(self.micro_onibus)} | Bikes: {len(self.bicicletas)}"
 
-    def set_onibus(self, onibus):
-        self.__onibus = onibus
-        
-    def get_vans(self):
-        return self.__vans
+class Gerenciador:
+    """
+    Classe que contem todas as funções que administram o csv.
+        Essa classe é usada para gerenciar o sistema de transporte, incluindo a autenticação de usuários,
+        cadastro e gerenciamento de veículos, pontos de parada, avisos e notificações.
+    """
+    def __init__(self, nome="Expresso Central"):
+        self.nome = nome
+        self.op_usuarios = OperadorArquivo("usuarios.csv")
+        self.op_veiculos = OperadorArquivo("veiculos.csv")
+        self.op_bicicletas = OperadorArquivo("bicicletas.csv")
+        self.op_pontos = OperadorArquivo("pontos_parada.csv")
+        self.op_avisos = OperadorArquivo("avisos.csv")
+        self.op_notificacoes = OperadorArquivo("notificacoes.csv")
 
-    def set_vans(self, vans):
-        self.__vans = vans
-
-    def get_bicicletas(self):
-        return self.__bicicletas
-    
-    def set_bicicletas(self, bicicletas):
-        self.__bicicletas = bicicletas
-
-    def get_micro_onibus(self):
-        return self.__micro_onibus
-    
-    def set_micro_onibus(self, micro_onibus):
-        self.__micro_onibus = micro_onibus
-
-    def __str__(self) -> str:
-        total_veiculos = len(self.__onibus) + len(self.__vans) + len(self.__micro_onibus) + len(self.__bicicletas)
-        return f"FrotaVeiculos: {total_veiculos} veículos registrados."
-    
-    def emprestar_bicicleta(self, placa):
-
-        operador = OperadorArquivo('bicicletas.csv')
-        
-        linhas = operador.ler_csv('bicicletas.csv')
-        if linhas:
-            bikes_atualizadas = [
-                Bicicleta(l['numero'], l['funcionamento'] == 'True', l['disponivel'] == 'True') 
-                for l in linhas 
-            ]
-            self.set_bicicletas(bikes_atualizadas)
-
-        sucesso = False
-        for bike in self.get_bicicletas():
-            if str(bike._placa) == str(placa):
-                if not bike.funcionando:
-                    print(f"Erro: A bicicleta {placa} está em manutenção.")
-                    return False
-                if not bike.disponivel:
-                    print(f"Erro: A bicicleta {placa} já está emprestada.")
-                    return False
-                
-                bike.disponivel = False  
-                sucesso = True
-                print(f"Sucesso: Bicicleta {placa} emprestada!")
-                break
-        
-        if not sucesso:
-            print(f"Erro: Bicicleta {placa} não encontrada.")
-            return False
-
-        dados = [{'numero': b._placa, 'funcionamento': str(b.funcionamento), 'disponivel': str(b.disponivel)} for b in self.get_bicicletas()]
-        operador.escrever_csv(dados, 'bicicletas.csv', ['numero', 'funcionamento', 'disponivel'])
-        return True
-
-        
-    def devolver_bicicleta(self, placa):
-        operador = OperadorArquivo('bicicletas.csv')
-        
-        linhas = operador.ler_csv('bicicletas.csv')
-        if linhas:
-            bicicletas_atualizadas = [
-                Bicicleta(l['numero'], l['funcionamento'] == 'True', l['disponivel'] == 'True') 
-                for l in linhas
-            ]
-            self.set_bicicletas(bicicletas_atualizadas)
-
-        sucesso = False
-        for bike in self.get_bicicletas():
-            if str(bike._placa) == str(placa):
-                if bike.disponivel:
-                    print(f"Erro: A bicicleta {placa} já consta como disponível.")
-                    return False
-                
-                bike.disponivel = True  
-                sucesso = True
-                print(f"Sucesso: Bicicleta {placa} devolvida com sucesso!")
-                break
-        
-        if not sucesso:
-            print(f"Erro: Bicicleta {placa} não pertence a esta frota.")
-            return False
-
-        dados = [{'numero': b._placa, 'funcionamento': str(b.funcionamento), 'disponivel': str(b.disponivel)} for b in self.get_bicicletas()]
-        operador.escrever_csv(dados, 'bicicletas.csv', ['numero', 'funcionamento', 'disponivel'])
-        return True
-
-class Ponto_parada():
-        """Classe responsavel por criar os locacis onde o onibus para com a informação do tipo de veiculo que passa na localidade"""
-        def __init__(self, endereco:str, tipo_veiculo:str):
-            self.endereco = endereco
-            self.tipo_veiculo = tipo_veiculo
-
-
-class Aviso():
-        """Cria o conteudo-chave da notificação"""
-        def __init__(self, conteudo:str):
-            self.conteudo = conteudo
-
-
-class Notificar():
-        """Mostra aos usuario os avisos , cujo conteudo advem da classe Aviso"""
-        @staticmethod
-        def mostrar_aviso(Aviso, notificador):
-                texto_aviso = f"{notificador.nome} notifica que : {Aviso.conteudo}"
-
-                operador=OperadorArquivo("avisos.csv")
-                dados_aviso = [{"autor": notificador.nome,"conteudo" : Aviso.conteudo     }]
-                operador.escrever_csv(dados_aviso,"avisos.csv",fieldnames=["autor","conteudo"  ])
-
-                return texto_aviso
-                
-
-
-class Gerenciador():
-    """Classe principal do sistema, gerencia o frota veiculos , os usuarios do sistema, pontos de parada e as bicicletas"""
-    
-    def __init__(self,usuarios: list ,frota_veiculos : FrotaVeiculos,nome : str, pontos_parada : list):
-        self.nome= nome
-        self.__usuarios=usuarios
-        self.frota_veiculos=frota_veiculos
-        self.ocorrencias=[]
-        self.pontos_parada=pontos_parada
-        self.operador_usuarios = OperadorArquivo('usuarios.csv')
-        dados_carregados = self.sincronizar_usuarios("carregar")
-
-        if dados_carregados:
-            self.__usuarios = dados_carregados
-        else:
-            self.__usuarios = usuarios
-            if usuarios:  
-                self.sincronizar_usuarios("salvar")
-
-    def sincronizar_usuarios(self, acao="carregar"):
-        if acao == "carregar":
-
-            dados_csv = self.operador_usuarios.ler_csv(self.operador_usuarios.arquivo)
-            if dados_csv:
-                return [Passageiro(l['nome'], l['senha']) for l in dados_csv]
-            return []
-                
-        elif acao == "salvar":
-            dados = [{'nome': u.nome, 'senha': u.get_senha()} for u in self.get_usuarios()]
-            self.operador_usuarios.escrever_csv(dados, self.operador_usuarios.arquivo, fieldnames=['nome', 'senha'])
-
-    def criar_aviso(self,conteudo):
-        
-       aviso=Aviso(conteudo)
-       return Notificar.mostrar_aviso(aviso, self)
-        
-        
-
-    def mudar_ponto_parada(self,endereco,tipo_veiculo,velho_ponto):
-        velho_ponto.endereco=endereco
-        velho_ponto.tipo_veiculo=tipo_veiculo
-        
-    def mudar_motorista(self,novos_veiculos,motorista):
-        motorista.veiculos_dirigidos= novos_veiculos
-        
-        
-    def cadastrar_usuario(self,novo_usuario):
-        lista_atual = self.get_usuarios()
-        lista_atual.append(novo_usuario)
-        self.set_usuario(lista_atual)
-        return "Usuário cadastrado com sucesso"
-        
-
-    def consultar_usuario(self,nome):
-        for usuario in self.get_usuarios():
-            if usuario.nome == nome:
+    def validar_motorista(self, nome_motorista):
+        usuarios_csv = self.op_usuarios.ler_csv(self.op_usuarios.arquivo) or []
+        for u in usuarios_csv:
+            if u.get("nome", "").strip() == nome_motorista and u.get("tipo", "").strip() == "Motorista":
                 return True
         return False
-             
-    def get_usuarios(self):
-        return self.__usuarios
 
-    def set_usuario(self,lista_usuarios):
-        if isinstance(lista_usuarios, list):
-            self.__usuarios = lista_usuarios
-            self.sincronizar_usuarios("salvar")
-            return "lista atualizada"
-        else:
-            return "tipo de usuarios errado, digite outro"  
-
-
-class Login():
-    """Verifica se um usuario possui o cadastro no sistema, permitindo que ele o acesse, ou cadastra-o"""
-
-    def __init__(self,nome,senha, gerenciador_instancia):
-        self.nome=nome
-        self.__senha=senha
-        self.gerenciador = gerenciador_instancia
-
-    def criar_conta(self)-> str:
-
-        passageiro = Passageiro(self.nome, self.get_senha())
-        self.gerenciador.cadastrar_usuario(passageiro)
-
-        return "Conta criada com sucesso!"
+    def cadastrar_usuario(self, nome, senha, tipo):
+        usuarios_csv = self.op_usuarios.ler_csv(self.op_usuarios.arquivo) or []
+        for u in usuarios_csv:
+            if u.get("nome", "").strip() == nome:
+                return False, "Já existe um usuário com esse nome."
+        usuarios_csv.append({"nome": nome, "senha": senha, "tipo": tipo})
+        self.op_usuarios.escrever_csv(usuarios_csv, self.op_usuarios.arquivo, ["nome", "senha", "tipo"])
+        return True, f"Usuário '{nome}' cadastrado !"
         
-
-    def entrar(self):
-        if not self.gerenciador.consultar_usuario(self.nome):
-            return "Usuário não encontrado."
+    def carregar_frota(self):
+        onibus_list, vans_list, micro_list, bike_list = [], [], [], []
+        linhas_v = self.op_veiculos.ler_csv(self.op_veiculos.arquivo) or []
         
-
-
-        for usuario in self.gerenciador.get_usuarios():
-            if usuario.nome == self.nome and usuario.get_senha() == self.get_senha():
-
-                return "Login bem sucedido."
-
-        return "Senha incorreta."
+        for row in linhas_v:
+            tipo = row.get("tipo", "").strip()
+            placa = row.get("placa", "").strip()
+            cap = int(row.get("capacidade", 0)) if row.get("capacidade") else 0
+            mot = row.get("motorista", "Sem Motorista").strip()
+            func = row.get("funcionando", "True").strip() == "True"
+            rota = row.get("rota", "Geral").strip()
+            passageiro = int(row.get("passageiros", 0)) if row.get("passageiros") else 0
+            
+            if tipo == "Ônibus": onibus_list.append(Onibus(placa, cap, mot, func, rota, passageiro))
+            elif tipo == "Van": vans_list.append(Van(placa, cap, mot, func, rota, passageiro))
+            elif tipo == "Micro-ônibus": micro_list.append(Micro_onibus(placa, cap, mot, func, rota, passageiro))
         
+        linhas_b = self.op_bicicletas.ler_csv(self.op_bicicletas.arquivo) or []
+        for row in linhas_b:
+            bike_list.append(Bicicleta(
+                row.get("numero", "").strip(),
+                funcionando=(row.get("funcionamento", "True").strip() == "True"),
+                disponivel=(row.get("disponivel", "True").strip() == "True")
+            ))
+            
+        return FrotaVeiculos(onibus_list, vans_list, micro_list, bike_list)
 
-    def get_senha(self):
-        return self.__senha
+    def cadastrar_veiculo(self, placa, tipo, capacidade, motorista):
+        if motorista and not self.validar_motorista(motorista):
+            return False, f"Motorista '{motorista}' não existe no sistema!"
+        linhas = self.op_veiculos.ler_csv(self.op_veiculos.arquivo) or []
+        linhas.append({"placa": placa, "tipo": tipo, "capacidade": capacidade, "passageiros": "0", "motorista": motorista, "funcionando": "True", "rota": "Geral"})
+        self.op_veiculos.escrever_csv(linhas, self.op_veiculos.arquivo, ["placa", "tipo", "capacidade", "passageiros", "motorista", "funcionando", "rota"])
+        return True, "Veículo cadastrado com sucesso!"
 
-    def set_senha(self, senha):
-        if isinstance(senha, str):
-            self.__senha = senha
+    def alterar_motorista_veiculo(self, placa, novo_motorista):
+        if novo_motorista and not self.validar_motorista(novo_motorista):
+            return False, f"Motorista '{novo_motorista}' não existe no sistema!"
+        linhas = self.op_veiculos.ler_csv(self.op_veiculos.arquivo) or []
+        alterou = False
+        for v in linhas:
+            if v.get("placa", "").strip().upper() == placa.upper():
+                v["motorista"] = novo_motorista
+                alterou = True
+                break
+        if alterou:
+            self.op_veiculos.escrever_csv(linhas, self.op_veiculos.arquivo, ["placa", "tipo", "capacidade", "passageiros", "motorista", "funcionando", "rota"])
+            return True, "Veículo atualizado com sucesso!"
+        return False, "Veículo não encontrado!"
+
+    def alterar_lotacao(self, placa, qtd, operacao):
+        linhas = self.op_veiculos.ler_csv(self.op_veiculos.arquivo) or []
+        for v in linhas:
+            if v.get("placa", "").strip().upper() == placa.upper():
+                atual = int(v.get("passageiros", 0))
+                capacidade = int(v.get("capacidade", 0))
+                if operacao == "subir":
+                    novo_total = atual + qtd
+                    if novo_total > capacidade:
+                        return False, f"Capacidade excedida! Máximo: {capacidade}, tentou adicionar: {novo_total}"
+                    v["passageiros"] = str(novo_total)
+                else:
+                    v["passageiros"] = str(max(0, atual - qtd))
+                self.op_veiculos.escrever_csv(linhas, self.op_veiculos.arquivo, ["placa", "tipo", "capacidade", "passageiros", "motorista", "funcionando", "rota"])
+                return True, "Lotação atualizada com sucesso!"
+        return False, "Veículo não encontrado!"
+
+
+    def cadastrar_bike(self, numero):
+        linhas = self.op_bicicletas.ler_csv(self.op_bicicletas.arquivo) or []
+        linhas.append({"numero": numero, "funcionamento": "True", "disponivel": "True"})
+        self.op_bicicletas.escrever_csv(linhas, self.op_bicicletas.arquivo, ["numero", "funcionamento", "disponivel"])
+        return True, "Bicicleta adicionada!"
+
+    def acao_bike(self, numero, acao):
+        linhas = self.op_bicicletas.ler_csv(self.op_bicicletas.arquivo) or []
+        for b in linhas:
+            if b.get("numero", "").strip() == numero:
+                b["disponivel"] = "False" if acao == "emp" else "True"
+                self.op_bicicletas.escrever_csv(linhas, self.op_bicicletas.arquivo, ["numero", "funcionamento", "disponivel"])
+                return True, "Ação realizada com sucesso!"
+        return False, "Bicicleta não encontrada!"
+
+
+    def obter_pontos(self):
+        return self.op_pontos.ler_csv(self.op_pontos.arquivo) or []
+
+    def cadastrar_ponto(self, endereco, tipo_veiculo):
+        linhas = self.obter_pontos()
+        linhas.append({"endereco": endereco, "tipo_veiculo": tipo_veiculo})
+        self.op_pontos.escrever_csv(linhas, self.op_pontos.arquivo, ["endereco", "tipo_veiculo"])
+        return True, "Ponto cadastrado!"
+
+    def alterar_ponto(self, index, novo_endereco, novo_tipo):
+        linhas = self.obter_pontos()
+        try:
+            linhas[index] = {"endereco": novo_endereco, "tipo_veiculo": novo_tipo}
+            self.op_pontos.escrever_csv(linhas, self.op_pontos.arquivo, ["endereco", "tipo_veiculo"])
+            return True, "Ponto alterado com sucesso!"
+        except IndexError:
+            return False, "Ponto não encontrado!"
+
+    def excluir_ponto(self, index):
+        linhas = self.obter_pontos()
+        try:
+            linhas.pop(index)
+            self.op_pontos.escrever_csv(linhas, self.op_pontos.arquivo, ["endereco", "tipo_veiculo"])
+            return True, "Ponto excluído com sucesso!"
+        except IndexError:
+            return False, "Ponto não encontrado!"
+
+
+    def obter_avisos(self):
+        return self.op_avisos.ler_csv(self.op_avisos.arquivo) or []
+
+    def publicar_aviso(self,conteudo):
+        linhas = self.obter_avisos()
+        linhas.append({"conteudo": conteudo})
+        self.op_avisos.escrever_csv(linhas, self.op_avisos.arquivo, ["conteudo"])
+        return True, "Aviso publicado!"
+
+    def excluir_aviso(self, index):
+        linhas = self.obter_avisos()
+        try:
+            linhas.pop(index)
+            cabecalhos = list(linhas[0].keys()) if linhas else ["conteudo"]
+            self.op_avisos.escrever_csv(linhas, self.op_avisos.arquivo, cabecalhos)
+            return True, "Aviso excluído!"
+        except Exception as e:
+            return False, f"Erro ao excluir: {e}"
+
+    def obter_notificacoes(self):
+        return self.op_notificacoes.ler_csv(self.op_notificacoes.arquivo) or []
+
+    def enviar_notificacao(self, usuario, mensagem):
+        linhas = self.obter_notificacoes()
+        dt = datetime.date.today().strftime('%d/%m/%Y')
+        linhas.append({"usuario": usuario, "mensagem": mensagem, "data": dt})
+        self.op_notificacoes.escrever_csv(linhas, self.op_notificacoes.arquivo, ["usuario", "mensagem", "data"])
+        return True, "Notificação enviada!"
+
+    def excluir_notificacao(self, index):
+        linhas = self.obter_notificacoes()
+        try:
+            linhas.pop(index)
+            self.op_notificacoes.escrever_csv(linhas, self.op_notificacoes.arquivo, ["usuario", "mensagem", "data"])
+            return True, "Notificação excluída!"
+        except IndexError:
+            return False, "Notificação não encontrada!"
+
+    def autenticar(self, nome, senha, perfil_acesso):
+        usuarios_csv = self.op_usuarios.ler_csv(self.op_usuarios.arquivo) or []
+        for row in usuarios_csv:
+            if row.get("nome", "").strip() == nome and row.get("senha", "").strip() == senha:
+                tipo_csv = row.get("tipo", "Usuário").strip()
+                
+                if perfil_acesso == "Gerenciador" and tipo_csv in ["Gerenciador", "Admin"]:
+                    u = Pessoa_admin(nome, senha)
+                    u.tipo_csv = tipo_csv
+                    return True, u, "Sucesso"
+                elif perfil_acesso == "Usuário" and tipo_csv in ["Usuário", "Passageiro", "Motorista"]:
+                    u = Passageiro(nome, senha)
+                    u.tipo_csv = tipo_csv
+                    return True, u, "Sucesso"
+                else:
+                    return False, None, f"Seu tipo no sistema é '{tipo_csv}'. Você não pode entrar como '{perfil_acesso}'."
+        return False, None, "Nome de usuário ou senha incorretos."

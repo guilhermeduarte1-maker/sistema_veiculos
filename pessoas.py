@@ -15,11 +15,7 @@ class Pessoa:
     def __init__(self, nome : str, senha : str):
         self.nome = nome
         self.__senha = senha
-        self.ocorrencias_gerais = []
 
-    def notificar_ocorrencia(self,conteudo) -> None:
-        self.ocorrencias_gerais.append(conteudo)
-        
 
     def get_senha(self):
         return self.__senha
@@ -32,33 +28,6 @@ class Pessoa:
         else:
             return "tipo de senha errado, digite outro"
 
-    def mudar_senha(self,nova_senha):
-        resultado = self.set_senha(nova_senha)
-        if "errado" in resultado:
-            return resultado  
-
-        operador = OperadorArquivo('usuarios.csv')
-        linhas = operador.ler_csv('usuarios.csv')
-
-        dados_atualizados = []
-        usuario_encontrado = False
-        
-        if linhas:
-            for l in linhas:
-                if l['nome'] == self.nome:
-                    l['senha'] = self.get_senha()
-                    usuario_encontrado = True
-                dados_atualizados.append(l)
-
-        # Se o usuário não existia no CSV por algum motivo, nós o adicionamos agora
-        if not usuario_encontrado:
-            dados_atualizados.append({'nome': self.nome, 'senha': self.get_senha()})
-                
-        operador.escrever_csv(dados_atualizados, 'usuarios.csv', ['nome', 'senha'])
-        return "Senha alterada e sincronizada no CSV com sucesso!"
-        
-
-
 class Motorista(Pessoa):
     """
     Representa um funcionário habilitado a conduzir os veículos da frota.
@@ -67,10 +36,8 @@ class Motorista(Pessoa):
         veículos específicos (como ônibus, vans ou micro-ônibus) estão sob a sua
         condução ou autorizados para a sua escala de trabalho.
     """
-    def __init__(self, nome, senha, veiculos_dirigidos: list):
+    def __init__(self, nome, senha):
         super().__init__(nome, senha)
-        
-        self.veiculos_dirigidos = veiculos_dirigidos
     
 class Passageiro(Pessoa):
     """

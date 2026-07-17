@@ -3,7 +3,11 @@ import abc
 
 
 class Veiculo(abc.ABC):
-    """Classe abstrata base para todos os veiculos gerenciados"""
+    """
+    Classe abstrata base para todos os veiculos gerenciados pelo sistema.
+        Esta classe define os atributos e métodos comuns a todos os tipos de veículos. 
+        Ela serve como um modelo para garantir que todos os veículos compartilhem uma interface.
+    """
     def __init__(self,placa : str,capacidade : int,motorista : str,funcionando : bool,passageiros: int):
         self._placa=placa
         self.capacidade=capacidade
@@ -11,42 +15,36 @@ class Veiculo(abc.ABC):
         self.funcionando=funcionando
         self.passageiros=passageiros
 
-    def entrada_passageiros(self, numero: int):
-        nome_veiculo = self.__class__.__name__ # Deixa o nome dinâmico (Onibus, Van, etc.)
-
-        if numero <= 0:
-            return "Quantidade de passageiros inexistente"
-            
-        elif self.passageiros >= self.capacidade:
-            return f"{nome_veiculo} lotado"
-            
-        elif self.passageiros + numero > self.capacidade:
-            # Correção do cálculo para mostrar quanto ultrapassou de forma limpa
-            vagas_restantes = self.capacidade - self.passageiros
-            superior = numero - vagas_restantes
-            return f"Numero de passageiros superior em {superior} da capacidade maxima"
-            
-        else:
-            # Caminho de sucesso: adiciona e mostra os lugares vagos que restaram
-            self.passageiros += numero
-            lugares_vagos = self.capacidade - self.passageiros
-            return f"Passageiros alocados. O {nome_veiculo} tem agora {lugares_vagos} lugares vagos"
-
 class Onibus(Veiculo):
+    """
+    Representa um ônibus na frota de veículos.
+        Esta classe herda de Veiculo e adiciona o atributo rota, que indica a rota específica que o ônibus percorre.
+    """
     def __init__(self, placa, capacidade, motorista, funcionando, rota,passageiros):
         super().__init__(placa, capacidade, motorista, funcionando,passageiros)
         
         self.rota = rota
 
 class Van(Veiculo):
+    """
+    Representa uma van na frota de veículos.
+        Esta classe herda de Veiculo e adiciona o atributo rota, que indica a rota específica que a van percorre.
+    """
     def __init__(self, placa, capacidade, motorista, funcionando, rota,passageiros):
         super().__init__(placa, capacidade, motorista, funcionando,passageiros)
         
         self.rota = rota
             
 class Micro_onibus(Onibus):
+    """
+    Representa um micro-ônibus na frota de veículos.
+        Esta classe herda de Onibus e mantém o mesmo atributo rota, permitindo a diferenciação entre micro-ônibus 
+        e ônibus regulares, enquanto compartilha a mesma estrutura de dados.
+    """
     def __init__(self, placa, capacidade, motorista, funcionando, rota,passageiros):
         super().__init__(placa, capacidade, motorista, funcionando, rota,passageiros)
+
+        self.rota = rota
         
 
 class Bicicleta(Veiculo):
